@@ -34,6 +34,7 @@ export const urlsToAssets = async (urls: string[]) => {
     ext: fullFilledAsset.url.split('.').pop(),
     mime: fullFilledAsset.mime ? fullFilledAsset.mime : undefined,
     rawFile: fullFilledAsset.rawFile,
+    wm: false,
   }));
 
   return assets;

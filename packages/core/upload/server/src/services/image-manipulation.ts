@@ -92,7 +92,9 @@ const resizeFileTo = async (
     mime: file.mime,
     filepath: filePath,
     path: file.path || null,
+    folderPath: file.folderPath || undefined,
     getStream: () => fs.createReadStream(filePath),
+    wm: file.wm || false,
   };
 
   Object.assign(newFile, {

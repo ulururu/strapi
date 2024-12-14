@@ -40,6 +40,7 @@ const editAssetRequest = (
       caption: asset.caption,
       folder: asset.folder,
       name: asset.name,
+      wm: asset.wm,
     })
   );
 

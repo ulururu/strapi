@@ -14,6 +14,7 @@ import {
   Flex,
   IconButton,
   Typography,
+  Checkbox,
 } from '@strapi/design-system';
 import { Pencil, Trash } from '@strapi/icons';
 import { useIntl } from 'react-intl';
@@ -58,6 +59,9 @@ export interface AssetCardBaseProps {
   selected?: boolean;
   subtitle?: string;
   variant: 'Image' | 'Video' | 'Audio' | 'Doc';
+  wm?: boolean;
+  onChangeRequireWaterMark?: (status: boolean) => void;
+  isPending?: boolean;
 }
 
 export const AssetCardBase = ({
@@ -71,6 +75,9 @@ export const AssetCardBase = ({
   selected = false,
   subtitle = '',
   variant = 'Image',
+  wm = false,
+  onChangeRequireWaterMark,
+  isPending,
 }: AssetCardBaseProps) => {
   const { formatMessage } = useIntl();
 
@@ -99,6 +106,25 @@ export const AssetCardBase = ({
         )}
         {(onRemove || onEdit) && (
           <CardActionsContainer onClick={handlePropagationClick} position="end">
+            {isPending && (
+              <Box
+                paddingLeft={1}
+                padding={1}
+                background="neutral0"
+                hasRadius
+                borderColor="neutral200"
+                zIndex="20"
+              >
+                <Checkbox
+                  aria-label={formatMessage({
+                    id: getTrad('control-card.with-watermark'),
+                    defaultMessage: 'With WaterMark',
+                  })}
+                  checked={wm}
+                  onCheckedChange={onChangeRequireWaterMark}
+                />
+              </Box>
+            )}
             {onRemove && (
               <IconButton
                 label={formatMessage({

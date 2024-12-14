@@ -53,6 +53,7 @@ export const PendingAssetStep = ({
   const { formatMessage } = useIntl();
   const { trackUsage } = useTracking();
   const [uploadStatus, setUploadStatus] = React.useState(Status.Idle);
+  const [requireImageWaterMarks, setRequireImageWaterMarks] = React.useState<Array<boolean>>([]);
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -103,6 +104,13 @@ export const PendingAssetStep = ({
     }
   };
 
+  const onChangeRequireWaterMark = (status: boolean, asset: File, index: number) => {
+    const newrequireImageWaterMarks = requireImageWaterMarks;
+    newrequireImageWaterMarks[index] = status;
+    setRequireImageWaterMarks([...newrequireImageWaterMarks]);
+    asset.wm = requireImageWaterMarks[index];
+  };
+
   return (
     <>
       <Modal.Header>
@@ -144,7 +152,7 @@ export const PendingAssetStep = ({
           </Flex>
           <KeyboardNavigable tagName="article">
             <Grid.Root gap={4}>
-              {assets.map((asset) => {
+              {assets.map((asset, index) => {
                 const assetKey = asset.url;
 
                 if (uploadStatus === Status.Uploading || uploadStatus === Status.Intermediate) {
@@ -174,6 +182,10 @@ export const PendingAssetStep = ({
                       alt={asset.name}
                       onEdit={onEditAsset}
                       onRemove={onRemoveAsset}
+                      onChangeRequireWaterMark={(status: boolean) =>
+                        onChangeRequireWaterMark(status, asset, index)
+                      }
+                      isPending={true}
                     />
                   </Grid.Item>
                 );

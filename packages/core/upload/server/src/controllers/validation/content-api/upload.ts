@@ -5,6 +5,7 @@ const fileInfoSchema = yup
     name: yup.string().nullable(),
     alternativeText: yup.string().nullable(),
     caption: yup.string().nullable(),
+    wm: yup.bool(),
   })
   .noUnknown();
 

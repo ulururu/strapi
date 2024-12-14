@@ -22,6 +22,8 @@ interface AssetCardProps {
   size?: 'S' | 'M';
   allowedTypes?: AllowedTypes[];
   alt?: string;
+  onChangeRequireWaterMark?: (status: boolean) => void;
+  isPending?: boolean;
 }
 
 export const AssetCard = ({
@@ -32,6 +34,8 @@ export const AssetCard = ({
   onRemove,
   size = 'M',
   local = false,
+  onChangeRequireWaterMark,
+  isPending = false,
 }: AssetCardProps) => {
   const handleSelect = onSelect ? () => onSelect(asset) : undefined;
 
@@ -62,6 +66,9 @@ export const AssetCard = ({
         width={asset.width!}
         updatedAt={asset.updatedAt}
         isUrlSigned={asset?.isUrlSigned || false}
+        wm={asset.wm}
+        onChangeRequireWaterMark={onChangeRequireWaterMark}
+        isPending={isPending}
         {...commonAssetCardProps}
       />
     );

@@ -21,7 +21,7 @@ const uploadAsset = (
   onProgress: (progress: number) => void,
   post: FetchClient['post']
 ) => {
-  const { rawFile, caption, name, alternativeText } = asset;
+  const { rawFile, caption, name, alternativeText, wm } = asset;
   const formData = new FormData();
 
   formData.append('files', rawFile!);
@@ -32,6 +32,7 @@ const uploadAsset = (
       name,
       caption,
       alternativeText,
+      wm,
       folder: folderId,
     })
   );
@@ -69,8 +70,9 @@ export const useUpload = () => {
     }
   );
 
-  const upload = (asset: Asset, folderId: number | null) =>
-    mutation.mutateAsync({ asset, folderId });
+  const upload = (asset: Asset, folderId: number | null) => {
+    return mutation.mutateAsync({ asset, folderId });
+  };
 
   const cancel = () => abortController.abort();
 

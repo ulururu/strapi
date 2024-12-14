@@ -50,6 +50,7 @@ const FIXTURE_ASSETS = [
     provider_metadata: null,
     createdAt: '2021-10-18T08:04:56.326Z',
     updatedAt: '2021-10-18T08:04:56.326Z',
+    wm: false,
   },
 ];
 
