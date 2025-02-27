@@ -68,6 +68,7 @@ export interface File {
     | {
         thumbnail: {
           url: string;
+          wm?: boolean;
         };
       }
     | null;
@@ -95,6 +96,7 @@ export interface File {
   publishedAt?: string;
   updatedBy?: number;
   isLocal?: boolean;
+  wm?: boolean;
 }
 
 export interface RawFile extends Blob {

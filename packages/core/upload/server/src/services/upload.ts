@@ -161,6 +161,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
       mime: type,
       size: bytesToKbytes(size),
       sizeInBytes: size,
+      wm: fileInfo.wm,
     };
 
     const { refId, ref, field } = metas;

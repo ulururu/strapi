@@ -102,6 +102,10 @@ export default {
         private: true,
         searchable: false,
       },
+      wm: {
+        type: 'boolean',
+        configurable: false,
+      },
     },
     // experimental feature:
     indexes: [

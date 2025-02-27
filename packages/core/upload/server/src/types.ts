@@ -35,6 +35,7 @@ export interface File {
   updatedAt?: string;
   createdBy?: number;
   updatedBy?: number;
+  wm?: boolean;
 }
 
 export interface Folder {
@@ -73,4 +74,5 @@ export type FileInfo = {
   alternativeText?: string | null;
   caption?: string | null;
   folder?: number;
+  wm: boolean | false;
 };

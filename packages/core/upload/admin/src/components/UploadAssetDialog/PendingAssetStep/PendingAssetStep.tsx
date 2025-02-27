@@ -53,34 +53,35 @@ export const PendingAssetStep = ({
   const { formatMessage } = useIntl();
   const { trackUsage } = useTracking();
   const [uploadStatus, setUploadStatus] = React.useState(Status.Idle);
+  const [requireImageWaterMarks, setRequireImageWaterMarks] = React.useState<Array<boolean>>([]);
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const assetsCountByType = assets.reduce(
-      (acc: Record<AssetType, string | number>, asset) => {
-        const { type } = asset;
+    // const assetsCountByType = assets.reduce(
+    //   (acc: Record<AssetType, string | number>, asset) => {
+    //     const { type } = asset;
 
-        if (type !== undefined && !acc[type]) {
-          acc[type] = 0;
-        }
+    //     if (type !== undefined && !acc[type]) {
+    //       acc[type] = 0;
+    //     }
 
-        if (type !== undefined) {
-          const accType = acc[type];
-          const currentCount = typeof accType === 'string' ? accType : accType.toString();
-          acc[type] = `${parseInt(currentCount, 10) + 1}`;
-        }
+    //     if (type !== undefined) {
+    //       const accType = acc[type];
+    //       const currentCount = typeof accType === 'string' ? accType : accType.toString();
+    //       acc[type] = `${parseInt(currentCount, 10) + 1}`;
+    //     }
 
-        return acc;
-      },
-      {} as Record<AssetType, string | number>
-    );
+    //     return acc;
+    //   },
+    //   {} as Record<AssetType, string | number>
+    // );
 
-    trackUsage('willAddMediaLibraryAssets', {
-      location: trackedLocation!,
-      ...assetsCountByType,
-    });
+    // trackUsage('willAddMediaLibraryAssets', {
+    //   location: trackedLocation!,
+    //   ...assetsCountByType,
+    // });
 
     setUploadStatus(Status.Uploading);
   };
@@ -101,6 +102,13 @@ export const PendingAssetStep = ({
     if (status === 'success') {
       onUploadSucceed(file);
     }
+  };
+
+  const onChangeRequireWaterMark = (status: boolean, asset: File, index: number) => {
+    const newrequireImageWaterMarks = requireImageWaterMarks;
+    newrequireImageWaterMarks[index] = status;
+    setRequireImageWaterMarks([...newrequireImageWaterMarks]);
+    asset.wm = requireImageWaterMarks[index];
   };
 
   return (
@@ -144,7 +152,7 @@ export const PendingAssetStep = ({
           </Flex>
           <KeyboardNavigable tagName="article">
             <Grid.Root gap={4}>
-              {assets.map((asset) => {
+              {assets.map((asset, index) => {
                 const assetKey = asset.url;
 
                 if (uploadStatus === Status.Uploading || uploadStatus === Status.Intermediate) {
@@ -174,6 +182,10 @@ export const PendingAssetStep = ({
                       alt={asset.name}
                       onEdit={onEditAsset}
                       onRemove={onRemoveAsset}
+                      onChangeRequireWaterMark={(status: boolean) =>
+                        onChangeRequireWaterMark(status, asset, index)
+                      }
+                      isPending={true}
                     />
                   </Grid.Item>
                 );

@@ -16,5 +16,6 @@ export const rawFileToAsset = (rawFile: RawFile, assetSource: AssetSource) => {
     mime: rawFile.type,
     rawFile,
     isLocal: true,
+    wm: false,
   };
 };
