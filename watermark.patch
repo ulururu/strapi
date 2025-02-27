@@ -1,0 +1,354 @@
+diff --git a/packages/core/upload/admin/src/components/AssetCard/AssetCard.tsx b/packages/core/upload/admin/src/components/AssetCard/AssetCard.tsx
+index eadf181e0c..8990d5f3ea 100644
+--- a/packages/core/upload/admin/src/components/AssetCard/AssetCard.tsx
++++ b/packages/core/upload/admin/src/components/AssetCard/AssetCard.tsx
+@@ -22,6 +22,8 @@ interface AssetCardProps {
+   size?: 'S' | 'M';
+   allowedTypes?: AllowedTypes[];
+   alt?: string;
++  onChangeRequireWaterMark?: (status: boolean) => void;
++  isPending?: boolean;
+ }
+ 
+ export const AssetCard = ({
+@@ -32,6 +34,8 @@ export const AssetCard = ({
+   onRemove,
+   size = 'M',
+   local = false,
++  onChangeRequireWaterMark,
++  isPending = false,
+ }: AssetCardProps) => {
+   const handleSelect = onSelect ? () => onSelect(asset) : undefined;
+ 
+@@ -62,6 +66,9 @@ export const AssetCard = ({
+         width={asset.width!}
+         updatedAt={asset.updatedAt}
+         isUrlSigned={asset?.isUrlSigned || false}
++        wm={asset.wm}
++        onChangeRequireWaterMark={onChangeRequireWaterMark}
++        isPending={isPending}
+         {...commonAssetCardProps}
+       />
+     );
+diff --git a/packages/core/upload/admin/src/components/AssetCard/AssetCardBase.tsx b/packages/core/upload/admin/src/components/AssetCard/AssetCardBase.tsx
+index 4a54b2b542..f9cdf70f9d 100644
+--- a/packages/core/upload/admin/src/components/AssetCard/AssetCardBase.tsx
++++ b/packages/core/upload/admin/src/components/AssetCard/AssetCardBase.tsx
+@@ -14,6 +14,7 @@ import {
+   Flex,
+   IconButton,
+   Typography,
++  Checkbox,
+ } from '@strapi/design-system';
+ import { Pencil, Trash } from '@strapi/icons';
+ import { useIntl } from 'react-intl';
+@@ -58,6 +59,9 @@ export interface AssetCardBaseProps {
+   selected?: boolean;
+   subtitle?: string;
+   variant: 'Image' | 'Video' | 'Audio' | 'Doc';
++  wm?: boolean;
++  onChangeRequireWaterMark?: (status: boolean) => void;
++  isPending?: boolean;
+ }
+ 
+ export const AssetCardBase = ({
+@@ -71,6 +75,9 @@ export const AssetCardBase = ({
+   selected = false,
+   subtitle = '',
+   variant = 'Image',
++  wm = false,
++  onChangeRequireWaterMark,
++  isPending,
+ }: AssetCardBaseProps) => {
+   const { formatMessage } = useIntl();
+ 
+@@ -99,6 +106,25 @@ export const AssetCardBase = ({
+         )}
+         {(onRemove || onEdit) && (
+           <CardActionsContainer onClick={handlePropagationClick} position="end">
++            {isPending && (
++              <Box
++                paddingLeft={1}
++                padding={1}
++                background="neutral0"
++                hasRadius
++                borderColor="neutral200"
++                zIndex="20"
++              >
++                <Checkbox
++                  aria-label={formatMessage({
++                    id: getTrad('control-card.with-watermark'),
++                    defaultMessage: 'With WaterMark',
++                  })}
++                  checked={wm}
++                  onCheckedChange={onChangeRequireWaterMark}
++                />
++              </Box>
++            )}
+             {onRemove && (
+               <IconButton
+                 label={formatMessage({
+diff --git a/packages/core/upload/admin/src/components/AssetDialog/BrowseStep/tests/BrowseStep.test.tsx b/packages/core/upload/admin/src/components/AssetDialog/BrowseStep/tests/BrowseStep.test.tsx
+index 1e471ecd63..c0588f40ff 100644
+--- a/packages/core/upload/admin/src/components/AssetDialog/BrowseStep/tests/BrowseStep.test.tsx
++++ b/packages/core/upload/admin/src/components/AssetDialog/BrowseStep/tests/BrowseStep.test.tsx
+@@ -50,6 +50,7 @@ const FIXTURE_ASSETS = [
+     provider_metadata: null,
+     createdAt: '2021-10-18T08:04:56.326Z',
+     updatedAt: '2021-10-18T08:04:56.326Z',
++    wm: false,
+   },
+ ];
+ 
+diff --git a/packages/core/upload/admin/src/components/UploadAssetDialog/PendingAssetStep/PendingAssetStep.tsx b/packages/core/upload/admin/src/components/UploadAssetDialog/PendingAssetStep/PendingAssetStep.tsx
+index 68fe0b3216..5beca56afe 100644
+--- a/packages/core/upload/admin/src/components/UploadAssetDialog/PendingAssetStep/PendingAssetStep.tsx
++++ b/packages/core/upload/admin/src/components/UploadAssetDialog/PendingAssetStep/PendingAssetStep.tsx
+@@ -53,6 +53,7 @@ export const PendingAssetStep = ({
+   const { formatMessage } = useIntl();
+   const { trackUsage } = useTracking();
+   const [uploadStatus, setUploadStatus] = React.useState(Status.Idle);
++  const [requireImageWaterMarks, setRequireImageWaterMarks] = React.useState<Array<boolean>>([]);
+ 
+   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+     e.preventDefault();
+@@ -103,6 +104,13 @@ export const PendingAssetStep = ({
+     }
+   };
+ 
++  const onChangeRequireWaterMark = (status: boolean, asset: File, index: number) => {
++    const newrequireImageWaterMarks = requireImageWaterMarks;
++    newrequireImageWaterMarks[index] = status;
++    setRequireImageWaterMarks([...newrequireImageWaterMarks]);
++    asset.wm = requireImageWaterMarks[index];
++  };
++
+   return (
+     <>
+       <Modal.Header>
+@@ -144,7 +152,7 @@ export const PendingAssetStep = ({
+           </Flex>
+           <KeyboardNavigable tagName="article">
+             <Grid.Root gap={4}>
+-              {assets.map((asset) => {
++              {assets.map((asset, index) => {
+                 const assetKey = asset.url;
+ 
+                 if (uploadStatus === Status.Uploading || uploadStatus === Status.Intermediate) {
+@@ -174,6 +182,10 @@ export const PendingAssetStep = ({
+                       alt={asset.name}
+                       onEdit={onEditAsset}
+                       onRemove={onRemoveAsset}
++                      onChangeRequireWaterMark={(status: boolean) =>
++                        onChangeRequireWaterMark(status, asset, index)
++                      }
++                      isPending={true}
+                     />
+                   </Grid.Item>
+                 );
+diff --git a/packages/core/upload/admin/src/hooks/useEditAsset.ts b/packages/core/upload/admin/src/hooks/useEditAsset.ts
+index 52d4902b81..fa5d4d6fae 100644
+--- a/packages/core/upload/admin/src/hooks/useEditAsset.ts
++++ b/packages/core/upload/admin/src/hooks/useEditAsset.ts
+@@ -40,6 +40,7 @@ const editAssetRequest = (
+       caption: asset.caption,
+       folder: asset.folder,
+       name: asset.name,
++      wm: asset.wm,
+     })
+   );
+ 
+diff --git a/packages/core/upload/admin/src/hooks/useUpload.ts b/packages/core/upload/admin/src/hooks/useUpload.ts
+index 3a890f81d6..a5a28749f3 100644
+--- a/packages/core/upload/admin/src/hooks/useUpload.ts
++++ b/packages/core/upload/admin/src/hooks/useUpload.ts
+@@ -21,7 +21,7 @@ const uploadAsset = (
+   onProgress: (progress: number) => void,
+   post: FetchClient['post']
+ ) => {
+-  const { rawFile, caption, name, alternativeText } = asset;
++  const { rawFile, caption, name, alternativeText, wm } = asset;
+   const formData = new FormData();
+ 
+   formData.append('files', rawFile!);
+@@ -32,6 +32,7 @@ const uploadAsset = (
+       name,
+       caption,
+       alternativeText,
++      wm,
+       folder: folderId,
+     })
+   );
+@@ -69,8 +70,9 @@ export const useUpload = () => {
+     }
+   );
+ 
+-  const upload = (asset: Asset, folderId: number | null) =>
+-    mutation.mutateAsync({ asset, folderId });
++  const upload = (asset: Asset, folderId: number | null) => {
++    return mutation.mutateAsync({ asset, folderId });
++  };
+ 
+   const cancel = () => abortController.abort();
+ 
+diff --git a/packages/core/upload/admin/src/utils/rawFileToAsset.ts b/packages/core/upload/admin/src/utils/rawFileToAsset.ts
+index e5f6f4e3e4..274fbc4477 100644
+--- a/packages/core/upload/admin/src/utils/rawFileToAsset.ts
++++ b/packages/core/upload/admin/src/utils/rawFileToAsset.ts
+@@ -16,5 +16,6 @@ export const rawFileToAsset = (rawFile: RawFile, assetSource: AssetSource) => {
+     mime: rawFile.type,
+     rawFile,
+     isLocal: true,
++    wm: false,
+   };
+ };
+diff --git a/packages/core/upload/admin/src/utils/urlsToAssets.ts b/packages/core/upload/admin/src/utils/urlsToAssets.ts
+index 1ff560a180..42a5040351 100644
+--- a/packages/core/upload/admin/src/utils/urlsToAssets.ts
++++ b/packages/core/upload/admin/src/utils/urlsToAssets.ts
+@@ -34,6 +34,7 @@ export const urlsToAssets = async (urls: string[]) => {
+     ext: fullFilledAsset.url.split('.').pop(),
+     mime: fullFilledAsset.mime ? fullFilledAsset.mime : undefined,
+     rawFile: fullFilledAsset.rawFile,
++    wm: false,
+   }));
+ 
+   return assets;
+diff --git a/packages/core/upload/package.json b/packages/core/upload/package.json
+index 6d4f8a8ece..3b90762c14 100644
+--- a/packages/core/upload/package.json
++++ b/packages/core/upload/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "@strapi/upload",
+-  "version": "5.5.1",
++  "version": "5.6.0",
+   "description": "Makes it easy to upload images and files to your Strapi Application.",
+   "license": "SEE LICENSE IN LICENSE",
+   "author": {
+@@ -59,8 +59,8 @@
+     "@mux/mux-player-react": "3.1.0",
+     "@strapi/design-system": "2.0.0-rc.14",
+     "@strapi/icons": "2.0.0-rc.14",
+-    "@strapi/provider-upload-local": "5.5.1",
+-    "@strapi/utils": "5.5.1",
++    "@strapi/provider-upload-local": "5.6.0",
++    "@strapi/utils": "5.6.0",
+     "byte-size": "8.1.1",
+     "cropperjs": "1.6.1",
+     "date-fns": "2.30.0",
+@@ -82,9 +82,9 @@
+     "yup": "0.32.9"
+   },
+   "devDependencies": {
+-    "@strapi/admin": "5.5.1",
++    "@strapi/admin": "5.6.0",
+     "@strapi/pack-up": "5.0.2",
+-    "@strapi/types": "5.5.1",
++    "@strapi/types": "5.6.0",
+     "@testing-library/dom": "10.1.0",
+     "@testing-library/react": "15.0.7",
+     "@testing-library/user-event": "14.5.2",
+diff --git a/packages/core/upload/server/src/content-types/file.ts b/packages/core/upload/server/src/content-types/file.ts
+index 167aea510c..92ccd97528 100644
+--- a/packages/core/upload/server/src/content-types/file.ts
++++ b/packages/core/upload/server/src/content-types/file.ts
+@@ -102,6 +102,10 @@ export default {
+         private: true,
+         searchable: false,
+       },
++      wm: {
++        type: 'boolean',
++        configurable: false,
++      },
+     },
+     // experimental feature:
+     indexes: [
+diff --git a/packages/core/upload/server/src/controllers/validation/admin/upload.ts b/packages/core/upload/server/src/controllers/validation/admin/upload.ts
+index 320c049522..2c47ac92f9 100644
+--- a/packages/core/upload/server/src/controllers/validation/admin/upload.ts
++++ b/packages/core/upload/server/src/controllers/validation/admin/upload.ts
+@@ -6,6 +6,7 @@ const fileInfoSchema = yup.object({
+   name: yup.string().nullable(),
+   alternativeText: yup.string().nullable(),
+   caption: yup.string().nullable(),
++  wm: yup.bool(),
+   folder: yup
+     .strapiID()
+     .nullable()
+diff --git a/packages/core/upload/server/src/controllers/validation/content-api/upload.ts b/packages/core/upload/server/src/controllers/validation/content-api/upload.ts
+index 1acd0153f8..fe0f72cb3a 100644
+--- a/packages/core/upload/server/src/controllers/validation/content-api/upload.ts
++++ b/packages/core/upload/server/src/controllers/validation/content-api/upload.ts
+@@ -5,6 +5,7 @@ const fileInfoSchema = yup
+     name: yup.string().nullable(),
+     alternativeText: yup.string().nullable(),
+     caption: yup.string().nullable(),
++    wm: yup.bool(),
+   })
+   .noUnknown();
+ 
+diff --git a/packages/core/upload/server/src/services/image-manipulation.ts b/packages/core/upload/server/src/services/image-manipulation.ts
+index 90bbf1a516..0e60546ba9 100644
+--- a/packages/core/upload/server/src/services/image-manipulation.ts
++++ b/packages/core/upload/server/src/services/image-manipulation.ts
+@@ -92,7 +92,9 @@ const resizeFileTo = async (
+     mime: file.mime,
+     filepath: filePath,
+     path: file.path || null,
++    folderPath: file.folderPath || undefined,
+     getStream: () => fs.createReadStream(filePath),
++    wm: file.wm || false,
+   };
+ 
+   Object.assign(newFile, {
+diff --git a/packages/core/upload/server/src/services/upload.ts b/packages/core/upload/server/src/services/upload.ts
+index 46510a48a8..600930b1b9 100644
+--- a/packages/core/upload/server/src/services/upload.ts
++++ b/packages/core/upload/server/src/services/upload.ts
+@@ -161,6 +161,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
+       mime: type,
+       size: bytesToKbytes(size),
+       sizeInBytes: size,
++      wm: fileInfo.wm,
+     };
+ 
+     const { refId, ref, field } = metas;
+diff --git a/packages/core/upload/server/src/types.ts b/packages/core/upload/server/src/types.ts
+index 30322bd62d..5ad8beffd5 100644
+--- a/packages/core/upload/server/src/types.ts
++++ b/packages/core/upload/server/src/types.ts
+@@ -35,6 +35,7 @@ export interface File {
+   updatedAt?: string;
+   createdBy?: number;
+   updatedBy?: number;
++  wm?: boolean;
+ }
+ 
+ export interface Folder {
+@@ -73,4 +74,5 @@ export type FileInfo = {
+   alternativeText?: string | null;
+   caption?: string | null;
+   folder?: number;
++  wm: boolean | false;
+ };
+diff --git a/packages/core/upload/shared/contracts/files.ts b/packages/core/upload/shared/contracts/files.ts
+index abd81ee2ce..439458b2e1 100644
+--- a/packages/core/upload/shared/contracts/files.ts
++++ b/packages/core/upload/shared/contracts/files.ts
+@@ -68,6 +68,7 @@ export interface File {
+     | {
+         thumbnail: {
+           url: string;
++          wm?: boolean;
+         };
+       }
+     | null;
+@@ -95,6 +96,7 @@ export interface File {
+   publishedAt?: string;
+   updatedBy?: number;
+   isLocal?: boolean;
++  wm?: boolean;
+ }
+ 
+ export interface RawFile extends Blob {
