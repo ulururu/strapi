@@ -30,6 +30,24 @@ module.exports = () => ({
       testConf: 3,
     },
   },
+  upload: {
+    enabled: true,
+    resolve: "../../packages/providers/upload-upyun",
+    config: {
+      provider: "@strapi/provider-upload-upyun",
+      providerOptions: {
+        serviceName: "uluru",
+        operatorName: "lukasu",
+        password: "SSTIoLciLJxnAGwiGkIWTHBJPBPl36jC",
+        baseUrl: "https://i.uluru.ru/",
+        uploadPath: "test",
+      },
+      breakpoints: {
+        large: 1920,
+        medium: 750,
+      },
+    },
+  },
   // NOTE: set enabled:true to test with a pre-built plugin. Make sure to run yarn build in the plugin folder first
   todo: {
     enabled: false,

@@ -346,7 +346,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
 
   async function updateFileInfo(
     id: ID,
-    { name, alternativeText, caption, folder }: FileInfo,
+    { name, alternativeText, caption, folder, wm }: FileInfo,
     opts?: CommonOptions
   ) {
     const { user } = opts ?? {};
@@ -366,6 +366,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
       caption: _.isNil(caption) ? dbFile.caption : caption,
       folder: _.isUndefined(folder) ? dbFile.folder : folder,
       folderPath: _.isUndefined(folder) ? dbFile.path : await fileService.getFolderPath(folder),
+      wm: _.isUndefined(wm) ? dbFile.wm : wm,
     };
 
     return update(id, newInfos, { user });

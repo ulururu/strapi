@@ -74,5 +74,5 @@ export type FileInfo = {
   alternativeText?: string | null;
   caption?: string | null;
   folder?: number;
-  wm: boolean | false;
+  wm?: boolean | false;
 };
